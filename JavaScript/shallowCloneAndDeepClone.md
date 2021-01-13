@@ -104,4 +104,24 @@ function deepClone(obj) {
 3. 无法正常拷贝循环引用
 
 ### 深拷贝改进版
-// TODO
+这里利用到了WeekMap来记录每一个object类型的数据，因为WeekMap对对象的引用不会阻碍浏览器的垃圾回收机制，进而避免内存泄露。
+```js
+const isComplexDataType = obj => typeof obj === 'object' && obj !== null;
+const deepClone = function (obj, hash = new WeakMap()) {
+  if (obj.constructor === Date) 
+  return new Date(obj)       // 日期对象直接返回一个新的日期对象
+  if (obj.constructor === RegExp)
+  return new RegExp(obj)     //正则对象直接返回一个新的正则对象
+  //如果循环引用了就用 weakMap 来解决
+  if (hash.has(obj)) return hash.get(obj)
+  // 继承原型链
+  let cloneObj = Object.create(Object.getPrototypeOf(obj))
+  // 存放key为对象的cloneObj
+  hash.set(obj, cloneObj)
+  // 对cloneObj的属性进行深拷贝
+  for (let key of Reflect.ownKeys(obj)) { 
+    cloneObj[key] = isComplexDataType(obj[key]) ? deepClone(obj[key], hash) : obj[key]
+  }
+  return cloneObj
+}
+```
